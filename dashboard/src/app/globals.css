@@ -1,0 +1,72 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@theme inline {
+  /* ── Light theme ─────────────────────────────────────── */
+  --color-background: oklch(0.985 0.002 250);
+  --color-foreground: oklch(0.145 0.015 260);
+
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.145 0.015 260);
+
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.145 0.015 260);
+
+  --color-primary: oklch(0.50 0.22 264);
+  --color-primary-foreground: oklch(0.99 0 0);
+
+  --color-secondary: oklch(0.965 0.005 260);
+  --color-secondary-foreground: oklch(0.25 0.015 260);
+
+  --color-muted: oklch(0.965 0.005 260);
+  --color-muted-foreground: oklch(0.46 0.02 260);
+
+  --color-accent: oklch(0.955 0.008 260);
+  --color-accent-foreground: oklch(0.25 0.015 260);
+
+  --color-destructive: oklch(0.55 0.2 25);
+  --color-destructive-foreground: oklch(0.99 0 0);
+
+  --color-border: oklch(0.915 0.005 260);
+  --color-input: oklch(0.915 0.005 260);
+  --color-ring: oklch(0.50 0.22 264);
+
+  --color-chart-1: oklch(0.55 0.18 162);
+  --color-chart-2: oklch(0.55 0.22 264);
+  --color-chart-3: oklch(0.55 0.17 300);
+  --color-chart-4: oklch(0.60 0.18 50);
+  --color-chart-5: oklch(0.55 0.16 195);
+
+  --radius: 0.625rem;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.82 0.01 260);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.7 0.01 260);
+}
+
+/* ── Utility ───────────────────────────────────────────── */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

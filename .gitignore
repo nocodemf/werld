@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+data/
+.env
+
+# Dashboard
+dashboard/.next/
+dashboard/node_modules/
