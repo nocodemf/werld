@@ -720,6 +720,22 @@ export function getNodeEnergyData(): NodeEnergyData[] {
   }
 }
 
+// ── Simulation start time ─────────────────────────────────────────────────
+
+export function getSimulationStartTime(): string | null {
+  const db = getDb();
+  try {
+    const row = db
+      .prepare(
+        `SELECT value FROM simulation_meta WHERE key = 'simulation_start_time'`
+      )
+      .get() as { value: string } | undefined;
+    return row?.value ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function getEcologyHistory(limit = 300): EcologyPoint[] {
   const db = getDb();
   try {

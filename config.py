@@ -1,5 +1,5 @@
 """
-Agentic Life Simulation — Global Configuration
+Werld — Global Configuration
 
 All tunable parameters for the simulation.
 Agents live on a graph topology — no grids, no human spatial metaphors.

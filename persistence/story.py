@@ -18,7 +18,7 @@ from persistence.db import get_connection
 import config as cfg
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-STORY_CHAPTER_EVERY = 1000  # Generate a chapter every N ticks
+STORY_CHAPTER_EVERY = 10000  # Generate a chapter every N ticks
 
 
 # ── Chapter name table (for the first ~20 chapters, then generate) ───────────

@@ -1,0 +1,2 @@
+# Werld — Python dependencies
+# Core simulation uses only the standard library. No pip install required.

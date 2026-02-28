@@ -19,6 +19,7 @@ import {
   getSubstrateTopology,
   getAgentPositions,
   getNodeEnergyData,
+  getSimulationStartTime,
 } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +46,7 @@ export async function GET() {
     const substrateTopology = getSubstrateTopology();
     const agentPositions = getAgentPositions();
     const nodeEnergyData = getNodeEnergyData();
+    const simulationStartTime = getSimulationStartTime();
 
     return NextResponse.json({
       overview,
@@ -66,6 +68,7 @@ export async function GET() {
       substrateTopology,
       agentPositions,
       nodeEnergyData,
+      simulationStartTime,
       timestamp: Date.now(),
     });
   } catch (error: unknown) {

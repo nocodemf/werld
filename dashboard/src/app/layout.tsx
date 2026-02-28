@@ -15,7 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Agentic Life — Observatory",
+  title: "Werld Observatory",
   description: "Real-time monitoring of computational life simulation",
 };
 

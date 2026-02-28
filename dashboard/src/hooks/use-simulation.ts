@@ -161,6 +161,7 @@ export interface SimulationData {
     energy: number;
     agentCount: number;
   }[];
+  simulationStartTime: string | null;
   timestamp: number;
 }
 
@@ -170,7 +171,6 @@ export function useSimulation(refreshInterval = 4000) {
   const [data, setData] = useState<SimulationData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [paused, setPaused] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -190,13 +190,11 @@ export function useSimulation(refreshInterval = 4000) {
 
   useEffect(() => {
     fetchData();
-    if (!paused) {
-      intervalRef.current = setInterval(fetchData, refreshInterval);
-    }
+    intervalRef.current = setInterval(fetchData, refreshInterval);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [fetchData, refreshInterval, paused]);
+  }, [fetchData, refreshInterval]);
 
-  return { data, error, loading, paused, setPaused, refresh: fetchData };
+  return { data, error, loading, refresh: fetchData };
 }

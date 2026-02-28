@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSimulation, type SimulationData } from "@/hooks/use-simulation";
 import OverviewSection from "@/components/dashboard/overview-section";
 import PopulationSection from "@/components/dashboard/population-section";
@@ -27,8 +27,6 @@ import {
   TreePine,
   BookOpen,
   Globe,
-  Pause,
-  Play,
   Home,
   FlaskConical,
 } from "lucide-react";
@@ -76,7 +74,7 @@ const NAV_ITEMS: {
 
 export default function Dashboard() {
   const [section, setSection] = useState<Section>("welcome");
-  const { data, error, loading, paused, setPaused } = useSimulation(4000);
+  const { data, error, loading } = useSimulation(4000);
 
   if (loading) {
     return (
@@ -118,7 +116,7 @@ export default function Dashboard() {
         {/* Logo */}
         <div className="px-5 py-5 border-b border-border">
           <h1 className="text-[13px] font-semibold tracking-[0.08em] text-foreground uppercase">
-            Agentic Life
+            Werld
           </h1>
           <p className="text-[11px] text-muted-foreground mt-0.5">
             Observatory
@@ -152,22 +150,10 @@ export default function Dashboard() {
         <div className="px-4 py-4 border-t border-border">
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
             <span className="relative flex h-1.5 w-1.5">
-              <span
-                className={cn(
-                  "absolute inline-flex h-full w-full rounded-full opacity-75",
-                  paused
-                    ? "bg-amber-400"
-                    : "bg-emerald-400 animate-ping"
-                )}
-              />
-              <span
-                className={cn(
-                  "relative inline-flex rounded-full h-1.5 w-1.5",
-                  paused ? "bg-amber-500" : "bg-emerald-500"
-                )}
-              />
+              <span className="absolute inline-flex h-full w-full rounded-full opacity-75 bg-emerald-400 animate-ping" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
             </span>
-            {paused ? "Paused" : "Live"}
+            Live
           </div>
           <div className="mt-1.5 font-mono text-[11px] text-foreground tabular-nums">
             Tick {data.overview.currentTick.toLocaleString()}
@@ -175,17 +161,7 @@ export default function Dashboard() {
           <div className="font-mono text-[11px] text-muted-foreground tabular-nums">
             {data.overview.population} agents
           </div>
-          <button
-            onClick={() => setPaused(!paused)}
-            className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-          >
-            {paused ? (
-              <Play className="w-3 h-3" />
-            ) : (
-              <Pause className="w-3 h-3" />
-            )}
-            {paused ? "Resume" : "Pause"} updates
-          </button>
+          <UptimeTimer startTime={data.simulationStartTime} />
         </div>
       </aside>
 
@@ -195,6 +171,52 @@ export default function Dashboard() {
           <SectionRenderer section={section} data={data} />
         </div>
       </main>
+    </div>
+  );
+}
+
+// ── Uptime timer ─────────────────────────────────────────────────────────
+
+function UptimeTimer({ startTime }: { startTime: string | null }) {
+  const [elapsed, setElapsed] = useState("");
+
+  useEffect(() => {
+    if (!startTime) {
+      setElapsed("—");
+      return;
+    }
+
+    const start = new Date(startTime).getTime();
+
+    function update() {
+      const diff = Date.now() - start;
+      if (diff < 0) {
+        setElapsed("—");
+        return;
+      }
+      const secs = Math.floor(diff / 1000);
+      const days = Math.floor(secs / 86400);
+      const hrs = Math.floor((secs % 86400) / 3600);
+      const mins = Math.floor((secs % 3600) / 60);
+      const s = secs % 60;
+
+      if (days > 0) {
+        setElapsed(`${days}d ${hrs}h ${mins}m`);
+      } else if (hrs > 0) {
+        setElapsed(`${hrs}h ${mins}m ${s}s`);
+      } else {
+        setElapsed(`${mins}m ${s}s`);
+      }
+    }
+
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  return (
+    <div className="mt-2 font-mono text-[11px] text-muted-foreground tabular-nums">
+      Uptime {elapsed}
     </div>
   );
 }

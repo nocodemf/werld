@@ -30,6 +30,7 @@ from persistence.event_log import (
 from persistence.state_store import save_checkpoint, save_milestone, get_latest_checkpoint
 from persistence.db import prune_old_data
 from persistence.story import generate_chapter, save_substrate_topology, STORY_CHAPTER_EVERY
+from social.x_poster import post_latest_unposted_chapter
 
 
 class Simulation:
@@ -75,6 +76,16 @@ class Simulation:
 
         # Store substrate topology for dashboard world visualization
         save_substrate_topology(self.substrate)
+
+        # Store simulation start time for dashboard uptime timer
+        from persistence.db import get_connection
+        from datetime import datetime, timezone
+        conn = get_connection()
+        conn.execute(
+            "INSERT OR REPLACE INTO simulation_meta (key, value) VALUES (?, ?)",
+            ("simulation_start_time", datetime.now(timezone.utc).isoformat()),
+        )
+        conn.commit()
 
     @classmethod
     def from_checkpoint(cls, path: str) -> "Simulation":
@@ -296,8 +307,24 @@ class Simulation:
                         )
                         log_death(self.tick, a.id, cause, a.state.age, a.generation)
 
-                # 7. Logging
+                # 7. Extinction safeguard (before logging so spawns are counted)
                 alive_after = self.alive_agents()
+
+                if cfg.EXTINCTION_SAFEGUARD and len(alive_after) <= 1 and alive_after:
+                    self._spawn_safeguard_mutant(alive_after[0])
+                    alive_after = self.alive_agents()
+
+                if not alive_after:
+                    if cfg.EXTINCTION_SAFEGUARD:
+                        self._spawn_fresh_pair()
+                        alive_after = self.alive_agents()
+                        print(f"  [SAFEGUARD] Population extinct — spawned fresh pair")
+                    else:
+                        self.logger.extinction(self.tick)
+                        self._save_and_log(alive_after)
+                        return
+
+                # 8. Logging (all births/deaths including safeguard are now counted)
                 if self.tick % cfg.LOG_EVERY == 0:
                     self.logger.tick_header(
                         self.tick, len(alive_after), self.substrate.total_energy(),
@@ -336,11 +363,16 @@ class Simulation:
                     mpath = save_milestone(self)
                     print(f"  [MILESTONE] Saved milestone at tick {self.tick}: {mpath}")
 
-                # Story chapter generation
+                # Story chapter generation + auto-post to X
                 if self.tick % STORY_CHAPTER_EVERY == 0 and self.tick > 0:
                     chapter = generate_chapter(self.tick)
                     if chapter:
                         print(f"  [STORY] New chapter written for tick {self.tick}")
+                        # Auto-post to X (non-blocking — failures won't crash sim)
+                        try:
+                            post_latest_unposted_chapter()
+                        except Exception as e:
+                            print(f"  [X-POSTER] Error: {e}")
 
                 # DB pruning
                 if self.tick % cfg.DB_PRUNE_EVERY == 0:
@@ -351,20 +383,6 @@ class Simulation:
                 # Dead agent memory purge
                 if self.tick % cfg.DEAD_AGENT_PURGE_EVERY == 0:
                     self._purge_dead_agents()
-
-                # Extinction safeguard
-                if cfg.EXTINCTION_SAFEGUARD and len(alive_after) <= 1 and alive_after:
-                    self._spawn_safeguard_mutant(alive_after[0])
-
-                # Extinction check
-                if not alive_after:
-                    if cfg.EXTINCTION_SAFEGUARD:
-                        self._spawn_fresh_pair()
-                        print(f"  [SAFEGUARD] Population extinct — spawned fresh pair")
-                    else:
-                        self.logger.extinction(self.tick)
-                        self._save_and_log(alive_after)
-                        return
 
         except KeyboardInterrupt:
             self.logger.interrupted(self.tick, self.agents)

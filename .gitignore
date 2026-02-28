@@ -1,7 +1,11 @@
 __pycache__/
 *.pyc
+*.egg-info/
+dist/
+build/
 data/
 .env
+.env.local
 
 # Dashboard
 dashboard/.next/

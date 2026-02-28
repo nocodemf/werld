@@ -1,4 +1,4 @@
-# Agentic Life Simulation — Project Reference
+# Werld — Project Reference
 
 ## Design Philosophy
 
@@ -12,9 +12,21 @@ The goal is **open-ended evolution**: agents should be able to naturally advance
 
 A Python simulation of autonomous agents that live, perceive, act, reproduce, and evolve on a graph-based substrate. Agents possess **NEAT-style evolvable neural networks**, an optionally-active associative cortex, episodic memory with evolvable parameters, heritable genomes with evolvable drives and I/O dimensions, evolvable sensory processing (64 channels including 19 latent slots), continuous motor effectors with evolvable broadcast bandwidth (up to 16 channels), and the ability to discover compound motor patterns with genome-gated thresholds.
 
-A **Next.js dashboard** ("Observatory") provides real-time god-like analysis with 11 sections, a story generator, world map visualization, and pervasive tooltips.
+The **Werld Observatory** is a Next.js dashboard providing real-time god-like analysis with 13 sections (Welcome, Methods, Overview, Story, World Map, Population, Evolution, Brain, Intelligence, Ecology, Resources, Communication, Agents), a story generator, world map visualization, pervasive tooltips, and a simulation uptime timer.
+
+The simulation automatically **posts updates to X (Twitter)** every 10,000 ticks via Gemini-generated tweet threads in a nature documentary narrator style. The public dashboard is hosted at **werld.uravshah.com** via Cloudflare Tunnel.
 
 The simulation is written in **pure Python** (no ML frameworks). The dashboard is **Next.js / React / TypeScript** with **Recharts** and **shadcn/ui**, reading from the same SQLite database.
+
+---
+
+## Naming
+
+- **Project name**: Werld
+- **Platform name**: Werld Observatory
+- **Public URL**: `https://werld.uravshah.com`
+- **Hosting**: Cloudflare Tunnel routing `werld.uravshah.com` → `localhost:3000` (dashboard runs locally from hard drive)
+- **X account**: Posts automated tweet threads summarising each epoch
 
 ---
 
@@ -25,8 +37,10 @@ world_v2/
 ├── main.py                  # Entry point — CLI, config, SIGTERM handler, watchdog
 ├── config.py                # All tunable simulation parameters (centralized)
 ├── claude.md                # This file — comprehensive project reference
+├── .env                     # API keys (X, Gemini) — gitignored
+├── .gitignore               # Excludes __pycache__, data/, .env, dashboard build artifacts
 ├── engine/
-│   ├── simulation.py        # Core loop, checkpointing, pruning, safeguards, story generation
+│   ├── simulation.py        # Core loop, checkpointing, pruning, safeguards, story gen, X posting
 │   └── substrate.py         # Graph world (Watts-Strogatz), pheromones, seasons, vis coords
 ├── agents/
 │   ├── agent.py             # Central agent class (perceive → decide → learn), 64-input/23-output
@@ -48,6 +62,9 @@ world_v2/
 │   ├── event_log.py         # Logging births, deaths, stats, snapshots
 │   ├── state_store.py       # Gzipped JSON checkpoint save/load/milestones
 │   └── story.py             # Story chapter generation + substrate topology persistence
+├── social/
+│   ├── __init__.py          # Module init
+│   └── x_poster.py          # X (Twitter) auto-poster — Gemini thread generation + tweepy posting
 ├── utils/
 │   ├── logger.py            # Console output formatting
 │   └── events.py            # Event helper utilities
@@ -58,24 +75,26 @@ world_v2/
 └── dashboard/               # Next.js observatory dashboard
     ├── src/
     │   ├── app/
-    │   │   ├── page.tsx             # Main page (sidebar + 11-section routing)
-    │   │   ├── layout.tsx           # Root layout (fonts, light theme)
+    │   │   ├── page.tsx             # Main page (sidebar + 13-section routing + uptime timer)
+    │   │   ├── layout.tsx           # Root layout (fonts, light theme, "Werld Observatory" title)
     │   │   ├── globals.css          # Light theme CSS variables
     │   │   └── api/simulation/
-    │   │       └── route.ts         # API endpoint — all simulation data
+    │   │       └── route.ts         # API endpoint — all simulation data + start time
     │   ├── components/
     │   │   ├── dashboard/
-    │   │   │   ├── overview-section.tsx      # Metrics, population trend, event feed
-    │   │   │   ├── story-section.tsx         # Story chapters, chronological/reverse toggle
-    │   │   │   ├── world-map-section.tsx     # Canvas world visualization (agents, energy, density)
-    │   │   │   ├── population-section.tsx    # Pop history, birth/death, generations
-    │   │   │   ├── evolution-section.tsx     # Species, generation, fitness trajectories
-    │   │   │   ├── brain-section.tsx         # Brain topology, metabolic cost, complexity
-    │   │   │   ├── intelligence-section.tsx  # Effector activity, cortex growth, motor patterns
-    │   │   │   ├── ecology-section.tsx       # Pop & diversity, energy flow, homeostasis
-    │   │   │   ├── resources-section.tsx     # Energy/entropy trends, distributions
-    │   │   │   ├── communication-section.tsx # Signal activity, decoder, content averages
-    │   │   │   └── agents-section.tsx        # Sortable roster, detail panel, genome view
+    │   │   │   ├── welcome-section.tsx      # Plain-English welcome page for general audience
+    │   │   │   ├── methods-section.tsx      # Deep technical reference (collapsible sections)
+    │   │   │   ├── overview-section.tsx     # Metrics, population trend, event feed
+    │   │   │   ├── story-section.tsx        # Story chapters, chronological/reverse toggle
+    │   │   │   ├── world-map-section.tsx    # Canvas world visualization (agents, energy, density)
+    │   │   │   ├── population-section.tsx   # Pop history, birth/death, generations
+    │   │   │   ├── evolution-section.tsx    # Species, generation, fitness trajectories
+    │   │   │   ├── brain-section.tsx        # Brain topology, metabolic cost, complexity
+    │   │   │   ├── intelligence-section.tsx # Effector activity, cortex growth, motor patterns
+    │   │   │   ├── ecology-section.tsx      # Pop & diversity, energy flow, homeostasis
+    │   │   │   ├── resources-section.tsx    # Energy/entropy trends, distributions
+    │   │   │   ├── communication-section.tsx# Signal activity, decoder, content averages
+    │   │   │   └── agents-section.tsx       # Sortable roster, detail panel, genome view
     │   │   └── ui/
     │   │       ├── info-tip.tsx      # Reusable tooltip component (? icon + hover popover)
     │   │       ├── card.tsx          # shadcn card
@@ -85,9 +104,9 @@ world_v2/
     │   │       ├── separator.tsx     # shadcn separator
     │   │       └── scroll-area.tsx   # shadcn scroll area
     │   ├── hooks/
-    │   │   └── use-simulation.ts    # Auto-polling hook (every 4s)
+    │   │   └── use-simulation.ts    # Auto-polling hook (every 4s), includes simulationStartTime
     │   └── lib/
-    │       ├── db.ts                # SQLite queries, effector queries, DB TTL, story/topology
+    │       ├── db.ts                # SQLite queries, effector queries, DB TTL, story/topology/startTime
     │       └── utils.ts             # cn helper
     └── package.json
 ```
@@ -261,7 +280,7 @@ Raw features are processed through evolvable `sensory_gains` and `sensory_offset
 
 ### Story Generation (`persistence/story.py`)
 
-Every `STORY_CHAPTER_EVERY` ticks (default: 1000), the simulation generates a plain-English narrative chapter summarizing what happened during that epoch. Chapters cover:
+Every `STORY_CHAPTER_EVERY` ticks (default: **10,000**), the simulation generates a plain-English narrative chapter summarising what happened during that epoch. Chapters cover:
 
 - Population changes (births, deaths, net growth)
 - Generational progress (max generation, average age)
@@ -276,10 +295,28 @@ Chapters are stored in the `story_chapters` table and displayed in the Story das
 
 The `save_substrate_topology()` function stores the graph layout (node positions, edges) in `simulation_meta` for the World Map visualization. Called once at simulation start and checkpoint restore.
 
+### X (Twitter) Auto-Posting (`social/x_poster.py`)
+
+After each story chapter is generated, the simulation attempts to post a tweet thread to X:
+
+1. **Rate limiting**: `MIN_HOURS_BETWEEN_POSTS = 12` — max 2 threads/day to stay within X free tier (500 posts/month). At ~7 tweets/thread × 2/day × 30 days = ~420/month.
+2. **Gemini rewrite**: The raw chapter is sent to Gemini (`gemini-2.0-flash`) with a system prompt that produces a nature documentary-style tweet thread. Voice: warm, observant, plain language, no jargon, no hashtags, no performed reactions.
+3. **Thread structure**: 1 hook tweet (ends with 🧵) + up to 6 follow-up replies. Each tweet ≤ 275 characters. Final tweet includes the dashboard URL.
+4. **Posting**: Uses `tweepy.Client` to post the hook and reply chain to X.
+5. **Tracking**: Posted chapters are recorded in the `posted_tweets` table to prevent duplicates.
+6. **Non-blocking**: Posting failures (API errors, rate limits) are caught and logged but never crash the simulation.
+
+**Dependencies**: `tweepy`, `google-genai`, `python-dotenv`
+
+**Configuration**: API keys stored in `.env` (gitignored):
+- `X_CONSUMER_KEY`, `X_CONSUMER_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET`
+- `GEMINI_API_KEY`
+- `DASHBOARD_URL` (defaults to `https://werld.uravshah.com`)
+
 ### Persistence
 
 **SQLite** (`persistence/db.py`, `persistence/event_log.py`):
-- Tables: `simulation_meta`, `events`, `lineage`, `snapshots`, `population_stats`, `comms_stats`, `species_stats`, `brain_stats`, `story_chapters`
+- Tables: `simulation_meta`, `events`, `lineage`, `snapshots`, `population_stats`, `comms_stats`, `species_stats`, `brain_stats`, `story_chapters`, `posted_tweets`
 - `brain_decision` events store `{"effectors": [7 floats], "continuous": true}` instead of action IDs
 - DB compaction (`prune_old_data`) runs every `DB_PRUNE_EVERY` ticks, deleting old `signal_sent` and `brain_decision` events, keeping last `DB_PRUNE_AFTER_TICKS` ticks of full detail
 
@@ -293,9 +330,10 @@ The `save_substrate_topology()` function stores the graph layout (node positions
 
 - **SIGTERM handler**: Saves checkpoint on graceful shutdown
 - **Watchdog mode** (`--watchdog`): Auto-restart on crash
-- **Extinction safeguard**: Auto-spawns mutants when population drops to 1 (`EXTINCTION_SAFEGUARD`)
+- **Extinction safeguard**: Auto-spawns mutants when population drops to 1 (`EXTINCTION_SAFEGUARD`). Safeguard spawns happen **before** logging, so all births/deaths are properly counted in statistics.
 - **Dead agent purging**: Removes long-dead agents from memory every `DEAD_AGENT_PURGE_EVERY` ticks
 - **DB compaction**: Prunes old events to prevent unbounded DB growth
+- **Simulation start time**: Stored in `simulation_meta` (key: `simulation_start_time`) as an ISO timestamp. Used by the dashboard uptime timer.
 
 ### Configuration (`config.py`)
 
@@ -333,13 +371,27 @@ Light-themed with oklch color variables in `globals.css`:
 - Primary: deep indigo/blue
 - Custom scrollbar styling
 
+### Branding
+
+- Page title: "Werld Observatory" (set in `layout.tsx`)
+- Sidebar header: "WERLD" + "Observatory"
+- Default landing page: "Welcome" section
+
 ### Tooltip System (`components/ui/info-tip.tsx`)
 
 A reusable `InfoTip` component provides contextual help throughout the dashboard:
 - Small `(?)` icon that shows a popover on hover
 - `TitleWithTip` helper for section headings with integrated tooltips
-- Used across all 11 dashboard sections to explain technical concepts in plain language
+- Used across all 11 data-driven dashboard sections to explain technical concepts in plain language
 - Goal: make the dashboard understandable even for non-technical users
+
+### Uptime Timer
+
+The sidebar displays a live uptime timer showing how long the simulation has been running:
+- `UptimeTimer` component in `page.tsx` reads `simulationStartTime` from the API
+- Updates every second, displays in `Xd Xh Xm` / `Xh Xm Xs` / `Xm Xs` format
+- Start time stored in `simulation_meta` table as ISO timestamp, set on fresh simulation init
+- Shows "—" if no start time is available
 
 ### Data Flow
 
@@ -347,69 +399,83 @@ A reusable `InfoTip` component provides contextual help throughout the dashboard
 2. `route.ts` calls query functions from `lib/db.ts`
 3. `db.ts` manages SQLite connection with **10-second TTL** (prevents stale data when simulation restarts)
 4. Data flows to section components via props from `page.tsx`
+5. API response includes `simulationStartTime` for the uptime timer
 
-### Dashboard Sections (11 total)
+### Dashboard Sections (13 total)
 
-#### 1. Overview
+#### 1. Welcome (static)
+- Plain-English explanation of the project for a general audience
+- Sections: "What is this?", "How does it work?", "What makes this different?", "What are we looking for?", "Using the Dashboard"
+- Dashboard section guide listing all 11 data sections with descriptions
+- No data dependency — renders without simulation data
+
+#### 2. Methods (static)
+- Deep technical reference with collapsible accordion sections
+- Sections: Architecture Overview, Brain (NEAT), Sensory System (64 channels), Motor System (23 effectors), Genome and Inheritance (29 traits), Cortex (reflex system), Episodic Memory, Motor Patterns, Communication, Natural Selection, Environmental Physics
+- Full trait table with ranges and descriptions
+- "Expand all" / "Collapse all" controls
+- No data dependency — renders without simulation data
+
+#### 3. Overview
 - Metric cards with tooltips: tick, population, avg energy/entropy/age, max generation, substrate energy
 - Population trend area chart
 - Recent events feed (births, deaths, inventions)
 
-#### 2. Story
+#### 4. Story
 - Chronological/reverse-chronological toggle
 - Each chapter: title, tick range, full narrative content
-- Progress bar showing chapters generated
-- Chapters generated every 1000 ticks from simulation data
+- Progress bar showing ticks until next chapter (every 10,000 ticks)
+- Chapters generated from simulation data via template-driven narrative
 
-#### 3. World Map
+#### 5. World Map
 - Canvas-based force-directed graph visualization
 - Three view modes: **Agents** (where agents are), **Energy** (node energy levels), **Density** (agent clustering)
 - Interactive pan and zoom
 - Summary stats (total nodes, edges, agents, avg energy)
 - Node colors reflect the selected view mode
 
-#### 4. Population
+#### 6. Population
 - Summary stats with tooltips
 - Population over time with births/deaths
 - Generation distribution bar chart
 - Max generation and avg age trends
 
-#### 5. Evolution
+#### 7. Evolution
 - Species population over time
 - Generation distribution
 - Active species table
 - Species fitness trajectories
 
-#### 6. Brain Complexity
+#### 8. Brain Complexity
 - Brain topology growth (nodes + connections over time)
 - Peak brain complexity
 - Metabolic cost trend
 - Species brain comparison
 
-#### 7. Intelligence
+#### 9. Intelligence
 - **Effector activity** bar chart (avg continuous activation per effector channel) — falls back to legacy action distribution if no effector data
 - **Effector activation over time** stacked area chart (locomotion, harvest, social, maintenance, reproduction, signal)
 - Cortex growth over time
 - Motor pattern (macro) discovery log
 
-#### 8. Ecology
+#### 10. Ecology
 - Population & species diversity
 - Birth/death dynamics
 - Energy flow
 - Homeostasis pressure
 
-#### 9. Resources
+#### 11. Resources
 - Energy & entropy over time
 - Substrate energy trend
 - Energy/entropy distribution histograms
 
-#### 10. Communication
+#### 12. Communication
 - Signal activity over time
 - Signal decoder
 - Message type distribution
 - Signal content averages
 
-#### 11. Agents
+#### 13. Agents
 - Sortable roster table (energy, entropy, age, generation, cortex, memory, macros)
 - Click-to-inspect detail panel with vitals and full genome display
 - Genome traits include all 29 traits (drives, I/O, cortex, memory, macros)
@@ -434,6 +500,9 @@ A reusable `InfoTip` component provides contextual help throughout the dashboard
 - `getEcologyHistory(limit)`: Population, diversity, energy flow over time
 - `getStoryChapters()`: All story chapters (chapter number, tick range, title, content)
 - `getSubstrateTopology()`: Graph topology from `simulation_meta` (nodes with positions, edges)
+- `getAgentPositions()`: Current agent positions on the graph for world map
+- `getNodeEnergyData()`: Per-node energy and agent count for world map
+- `getSimulationStartTime()`: ISO timestamp from `simulation_meta` for uptime timer
 
 ---
 
@@ -441,7 +510,7 @@ A reusable `InfoTip` component provides contextual help throughout the dashboard
 
 ### `simulation_meta`
 - `key TEXT PRIMARY KEY`, `value TEXT`
-- Stores: `substrate_topology` (JSON with nodes, edges, positions)
+- Stores: `substrate_topology` (JSON with nodes, edges, positions), `simulation_start_time` (ISO timestamp)
 
 ### `events`
 - `id INTEGER PRIMARY KEY AUTOINCREMENT`
@@ -488,6 +557,11 @@ A reusable `InfoTip` component provides contextual help throughout the dashboard
 - `tick_start INTEGER NOT NULL`, `tick_end INTEGER NOT NULL`
 - `title TEXT NOT NULL`, `content TEXT NOT NULL`
 - `created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
+
+### `posted_tweets`
+- `chapter INTEGER PRIMARY KEY`
+- `tweet_ids TEXT` (JSON array of tweet ID strings)
+- `posted_at TEXT` (ISO timestamp)
 
 ---
 
@@ -597,6 +671,26 @@ A reusable `InfoTip` component provides contextual help throughout the dashboard
 
 ---
 
+## Public Hosting & Social
+
+### Cloudflare Tunnel
+- The simulation and dashboard run locally from an external hard drive
+- A Cloudflare Tunnel routes `werld.uravshah.com` → `localhost:3000`
+- The tunnel runs as a system service (`cloudflared`) — persists across reboots
+- GoDaddy nameservers are set to Cloudflare for the `uravshah.com` domain
+- No Vercel/cloud hosting needed — the dashboard reads directly from the local SQLite file
+
+### X (Twitter) Integration
+- Automated tweet threads posted after each story chapter (every 10,000 ticks)
+- Rate-limited to max 2 threads/day (MIN_HOURS_BETWEEN_POSTS = 12)
+- Tweet generation via Gemini `gemini-2.0-flash` model
+- Nature documentary narrator voice: warm, observant, plain language, no jargon
+- Thread format: 1 hook tweet (🧵) + up to 6 replies, each ≤ 275 chars
+- Final tweet includes live dashboard link
+- Credentials in `.env` file (gitignored)
+
+---
+
 ## Running the Project
 
 ### Simulation
@@ -614,9 +708,39 @@ python main.py --watchdog               # Auto-restart on crash
 cd /path/to/world_v2/dashboard
 npm install
 npm run dev                             # Starts on http://localhost:3000
+# Or for production:
+npm run build && npm start              # Production build on http://localhost:3000
 ```
 
 The dashboard reads SQLite from `../data/simulation.db` relative to the dashboard directory.
+
+### Production Deployment (Hard Drive)
+```bash
+# From the hard drive (e.g. /Volumes/Samsung Harddrive /world_v2/)
+# 1. Start dashboard (production)
+cd dashboard && npm run build && npm start &
+
+# 2. Start simulation
+cd .. && python3 main.py --watchdog
+
+# 3. Cloudflare tunnel (runs as system service, auto-starts)
+# werld.uravshah.com → localhost:3000
+```
+
+### Required Python Packages
+```bash
+pip install tweepy google-genai python-dotenv
+```
+
+### Environment Variables (`.env`)
+```
+X_CONSUMER_KEY=...
+X_CONSUMER_SECRET=...
+X_ACCESS_TOKEN=...
+X_ACCESS_TOKEN_SECRET=...
+GEMINI_API_KEY=...
+DASHBOARD_URL=https://werld.uravshah.com
+```
 
 ---
 
@@ -638,6 +762,10 @@ The dashboard reads SQLite from `../data/simulation.db` relative to the dashboar
 
 8. **Latent Sensory Channels**: Channels 45-63 start with gain 0.01 (effectively dormant). Evolution can "discover" them by evolving the gain higher. This allows sensory field expansion without breaking NEAT crossover (all agents have the same I/O dimensionality).
 
+9. **Extinction Safeguard Ordering**: Safeguard spawns (when population drops to 1) now happen **before** logging, so all births/deaths including safeguard-spawned agents are properly counted in `total_births`/`total_deaths` statistics. Previously, safeguard spawns after logging caused misleading dashboard numbers.
+
+10. **X Free Tier Rate Limits**: The X free tier allows 500 posts/month. With chapters every 10,000 ticks (~10 seconds at 1000 ticks/sec), posting every chapter would exhaust the limit in minutes. The `MIN_HOURS_BETWEEN_POSTS = 12` rate limiter ensures max ~420 tweets/month. Chapters still accumulate on the dashboard regardless of posting.
+
 ---
 
 ## Phase History
@@ -655,5 +783,6 @@ The dashboard reads SQLite from `../data/simulation.db` relative to the dashboar
 | B | Evolvable Sensory Processing | Complete | Per-channel gain/offset, stochastic inputs, sensory metabolic cost |
 | C | Naturalized Motor Interface | Complete | 7 continuous effectors + 4 broadcast channels, interpret_effectors() |
 | D | Documentation Update | Complete | Comprehensive claude.md |
-| E | Story, World Map, Tooltips | Complete | Story generation (every 1000 ticks), canvas world map, InfoTip system, 11 dashboard sections |
+| E | Story, World Map, Tooltips | Complete | Story generation (every 10,000 ticks), canvas world map, InfoTip system, 11 dashboard sections |
 | **F** | **Remove Hardcoded Agent Ceilings** | **Complete** | **Evolvable broadcast bandwidth (1-16), 64-channel sensory field with 19 latent slots, cortex reliance/resolution, evolvable memory decay/social_weight, genome-gated macro capacity/pattern_length. 29 total genome traits. Zero hardcoded cognitive constraints.** |
+| **G** | **Public Launch & Social** | **Complete** | **Renamed to "Werld Observatory". 2 new dashboard pages (Welcome, Methods). Removed pause button, added uptime timer. X auto-posting via Gemini tweet threads. Cloudflare Tunnel hosting at werld.uravshah.com. Extinction safeguard ordering fix. Rate-limited X posting (12h minimum).** |

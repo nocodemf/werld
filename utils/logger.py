@@ -118,7 +118,7 @@ class SimLogger:
 
         lines = [
             f"{'='*70}",
-            f"AGENTIC LIFE SIMULATION — STATE DUMP (Graph Topology)",
+            f"WERLD — STATE DUMP (Graph Topology)",
             f"Tick: {tick} | Elapsed: {elapsed:.0f}s | Population: {len(alive)}",
             f"Births: {self.total_births} | Deaths: {self.total_deaths}",
             f"Graph: {substrate.num_nodes()} nodes, avg degree {substrate.avg_degree():.1f}",

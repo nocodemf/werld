@@ -6,7 +6,7 @@ export default function WelcomeSection() {
       {/* Hero */}
       <div className="mb-10">
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-          Welcome to the Observatory
+          Welcome to Werld Observatory
         </h1>
         <p className="text-sm text-muted-foreground mt-1.5">
           A window into a living, evolving digital world.

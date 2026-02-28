@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Agentic Life Simulation — Entry Point
+Werld — Entry Point
 
 A tick-based simulation where computational entities emerge, survive,
 communicate, evolve, and reproduce within a graph-based resource network.
@@ -71,7 +71,7 @@ def _build_or_resume(args) -> Simulation:
 def main() -> None:
     global _active_sim
 
-    parser = argparse.ArgumentParser(description="Agentic Life Simulation")
+    parser = argparse.ArgumentParser(description="Werld Simulation")
     parser.add_argument("--seed", type=int, default=None, help="Random seed")
     parser.add_argument("--ticks", type=int, default=0, help="Max ticks (0=indefinite)")
     parser.add_argument("--quiet", action="store_true", help="Suppress per-agent output")
@@ -107,8 +107,8 @@ def main() -> None:
 
     # Banner
     print("=" * 60)
-    print("  AGENTIC LIFE SIMULATION")
-    print("  Computational entities on a graph topology")
+    print("  WERLD")
+    print("  Autonomous agents on a graph topology")
     print("=" * 60)
 
     # Brain status
