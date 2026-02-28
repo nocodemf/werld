@@ -47,7 +47,7 @@ X_CONSUMER_SECRET = os.getenv("X_CONSUMER_SECRET", "")
 X_ACCESS_TOKEN = os.getenv("X_ACCESS_TOKEN", "")
 X_ACCESS_TOKEN_SECRET = os.getenv("X_ACCESS_TOKEN_SECRET", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-DASHBOARD_URL = os.getenv("DASHBOARD_URL", "https://werld.uravshah.com")
+DASHBOARD_URL = os.getenv("DASHBOARD_URL", "http://localhost:3000")
 
 # ── Constants ────────────────────────────────────────────────────────────────
 

@@ -1,60 +1,54 @@
 # Contributing to Werld
 
-Thanks for considering contributing. Here's how to get going.
-
 ## Setup
 
-1. **Clone and install**
+```bash
+git clone https://github.com/nocodemf/werld.git
+cd werld
+```
 
-   ```bash
-   git clone https://github.com/nocodemf/werld.git
-   cd werld
-   cd dashboard && npm install
-   ```
+The simulation is pure Python (stdlib only) — no `pip install` needed.
 
-   No Python deps — the sim uses stdlib only.
+```bash
+python main.py --ticks 1000    # verify it runs
+```
 
-2. **Run the simulation**
+For the dashboard:
 
-   ```bash
-   python main.py --ticks 1000
-   ```
+```bash
+cd dashboard && npm install && npm run dev
+```
 
-3. **Run the dashboard**
-
-   ```bash
-   cd dashboard && npm run dev
-   ```
-
-   The dashboard reads from `../data/simulation.db`. Run the sim first so there's data to show.
+Reads from `../data/simulation.db`, so run the simulation first.
 
 ## Development workflow
 
-- **Config** — Most tunable parameters live in `config.py`. Start there for behavior changes.
-- **Architecture** — See `CLAUDE.md` for the full reference (sensory channels, effectors, genome traits, etc.).
-- **Python** — We use type hints and `from __future__ import annotations`. No ML frameworks; keep it pure Python.
+- **`config.py`** — Most tunable parameters live here. Start here for behavior changes.
+- **`CLAUDE.md`** — Full technical reference: sensory channels, effectors, genome traits, architecture.
+- **Python** — Type hints, `from __future__ import annotations`. Pure stdlib, no ML frameworks.
 - **Dashboard** — Next.js 16, React 19, TypeScript, shadcn/ui, Recharts.
 
 ## Pull requests
 
-1. Open an issue first if it's a big change — helps align on direction.
+1. Open an issue first if it's a big change — helps align on direction before you write code.
 2. Branch from `main`, keep PRs focused.
-3. Make sure the sim still runs (`python main.py --ticks 500`) and the dashboard builds (`cd dashboard && npm run build`).
-4. Update `CLAUDE.md` if you change architecture or add new systems.
+3. Verify: `python main.py --ticks 500` runs clean and `cd dashboard && npm run build` succeeds.
+4. Update `CLAUDE.md` if you change architecture, add systems, or modify the genome/sensory/effector layout.
 
-## What we're looking for
+## Good contributions
 
-- **Bug fixes** — Especially around checkpoint compatibility, DB schema, or edge cases in the sim loop.
-- **Config / tuning** — Better defaults, new genome traits, substrate params. Document why.
-- **Dashboard** — New visualizations, clearer tooltips, performance improvements.
-- **Docs** — Clarifications, examples, or corrections to `CLAUDE.md` and this file.
+- **Bug fixes** — checkpoint compatibility, DB schema, simulation loop edge cases.
+- **Tuning** — better defaults, new genome traits, substrate parameters. Explain the reasoning.
+- **Dashboard** — new visualizations, better tooltips, performance.
+- **Docs** — corrections, clarifications, examples.
+- **Ideas that expand evolvability** — new latent sensory channels, additional effector dimensions, novel selection pressures. The design goal is maximum evolvable surface area.
 
-## What we're not looking for (right now)
+## Out of scope (for now)
 
 - Rewrites in another language.
-- Adding ML frameworks (PyTorch, etc.) — the brain is NEAT, no gradients.
-- Hardcoding new behavioral assumptions — the design goal is evolvable, not engineered.
+- ML frameworks (PyTorch, TensorFlow, etc.) — the brain is NEAT, evolution is the optimizer.
+- Hardcoded behavioral assumptions — if it doesn't evolve, it doesn't belong in the agent.
 
 ## Questions?
 
-Open an issue. We'll get back to you.
+Open an issue.

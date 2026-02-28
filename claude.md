@@ -14,8 +14,6 @@ A Python simulation of autonomous agents that live, perceive, act, reproduce, an
 
 The **Werld Observatory** is a Next.js dashboard providing real-time god-like analysis with 13 sections (Welcome, Methods, Overview, Story, World Map, Population, Evolution, Brain, Intelligence, Ecology, Resources, Communication, Agents), a story generator, world map visualization, pervasive tooltips, and a simulation uptime timer.
 
-The simulation automatically **posts updates to X (Twitter)** every 10,000 ticks via Gemini-generated tweet threads in a nature documentary narrator style. The public dashboard is hosted at **werld.uravshah.com** via Cloudflare Tunnel.
-
 The simulation is written in **pure Python** (no ML frameworks). The dashboard is **Next.js / React / TypeScript** with **Recharts** and **shadcn/ui**, reading from the same SQLite database.
 
 ---
@@ -24,9 +22,6 @@ The simulation is written in **pure Python** (no ML frameworks). The dashboard i
 
 - **Project name**: Werld
 - **Platform name**: Werld Observatory
-- **Public URL**: `https://werld.uravshah.com`
-- **Hosting**: Cloudflare Tunnel routing `werld.uravshah.com` → `localhost:3000` (dashboard runs locally from hard drive)
-- **X account**: Posts automated tweet threads summarising each epoch
 
 ---
 
@@ -37,10 +32,9 @@ world_v2/
 ├── main.py                  # Entry point — CLI, config, SIGTERM handler, watchdog
 ├── config.py                # All tunable simulation parameters (centralized)
 ├── claude.md                # This file — comprehensive project reference
-├── .env                     # API keys (X, Gemini) — gitignored
 ├── .gitignore               # Excludes __pycache__, data/, .env, dashboard build artifacts
 ├── engine/
-│   ├── simulation.py        # Core loop, checkpointing, pruning, safeguards, story gen, X posting
+│   ├── simulation.py        # Core loop, checkpointing, pruning, safeguards, story gen
 │   └── substrate.py         # Graph world (Watts-Strogatz), pheromones, seasons, vis coords
 ├── agents/
 │   ├── agent.py             # Central agent class (perceive → decide → learn), 64-input/23-output
@@ -62,9 +56,6 @@ world_v2/
 │   ├── event_log.py         # Logging births, deaths, stats, snapshots
 │   ├── state_store.py       # Gzipped JSON checkpoint save/load/milestones
 │   └── story.py             # Story chapter generation + substrate topology persistence
-├── social/
-│   ├── __init__.py          # Module init
-│   └── x_poster.py          # X (Twitter) auto-poster — Gemini thread generation + tweepy posting
 ├── utils/
 │   ├── logger.py            # Console output formatting
 │   └── events.py            # Event helper utilities
@@ -295,28 +286,10 @@ Chapters are stored in the `story_chapters` table and displayed in the Story das
 
 The `save_substrate_topology()` function stores the graph layout (node positions, edges) in `simulation_meta` for the World Map visualization. Called once at simulation start and checkpoint restore.
 
-### X (Twitter) Auto-Posting (`social/x_poster.py`)
-
-After each story chapter is generated, the simulation attempts to post a tweet thread to X:
-
-1. **Rate limiting**: `MIN_HOURS_BETWEEN_POSTS = 12` — max 2 threads/day to stay within X free tier (500 posts/month). At ~7 tweets/thread × 2/day × 30 days = ~420/month.
-2. **Gemini rewrite**: The raw chapter is sent to Gemini (`gemini-2.0-flash`) with a system prompt that produces a nature documentary-style tweet thread. Voice: warm, observant, plain language, no jargon, no hashtags, no performed reactions.
-3. **Thread structure**: 1 hook tweet (ends with 🧵) + up to 6 follow-up replies. Each tweet ≤ 275 characters. Final tweet includes the dashboard URL.
-4. **Posting**: Uses `tweepy.Client` to post the hook and reply chain to X.
-5. **Tracking**: Posted chapters are recorded in the `posted_tweets` table to prevent duplicates.
-6. **Non-blocking**: Posting failures (API errors, rate limits) are caught and logged but never crash the simulation.
-
-**Dependencies**: `tweepy`, `google-genai`, `python-dotenv`
-
-**Configuration**: API keys stored in `.env` (gitignored):
-- `X_CONSUMER_KEY`, `X_CONSUMER_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET`
-- `GEMINI_API_KEY`
-- `DASHBOARD_URL` (defaults to `https://werld.uravshah.com`)
-
 ### Persistence
 
 **SQLite** (`persistence/db.py`, `persistence/event_log.py`):
-- Tables: `simulation_meta`, `events`, `lineage`, `snapshots`, `population_stats`, `comms_stats`, `species_stats`, `brain_stats`, `story_chapters`, `posted_tweets`
+- Tables: `simulation_meta`, `events`, `lineage`, `snapshots`, `population_stats`, `comms_stats`, `species_stats`, `brain_stats`, `story_chapters`
 - `brain_decision` events store `{"effectors": [7 floats], "continuous": true}` instead of action IDs
 - DB compaction (`prune_old_data`) runs every `DB_PRUNE_EVERY` ticks, deleting old `signal_sent` and `brain_decision` events, keeping last `DB_PRUNE_AFTER_TICKS` ticks of full detail
 
@@ -558,11 +531,6 @@ The sidebar displays a live uptime timer showing how long the simulation has bee
 - `title TEXT NOT NULL`, `content TEXT NOT NULL`
 - `created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
 
-### `posted_tweets`
-- `chapter INTEGER PRIMARY KEY`
-- `tweet_ids TEXT` (JSON array of tweet ID strings)
-- `posted_at TEXT` (ISO timestamp)
-
 ---
 
 ## Genome Traits Reference (29 traits)
@@ -671,26 +639,6 @@ The sidebar displays a live uptime timer showing how long the simulation has bee
 
 ---
 
-## Public Hosting & Social
-
-### Cloudflare Tunnel
-- The simulation and dashboard run locally from an external hard drive
-- A Cloudflare Tunnel routes `werld.uravshah.com` → `localhost:3000`
-- The tunnel runs as a system service (`cloudflared`) — persists across reboots
-- GoDaddy nameservers are set to Cloudflare for the `uravshah.com` domain
-- No Vercel/cloud hosting needed — the dashboard reads directly from the local SQLite file
-
-### X (Twitter) Integration
-- Automated tweet threads posted after each story chapter (every 10,000 ticks)
-- Rate-limited to max 2 threads/day (MIN_HOURS_BETWEEN_POSTS = 12)
-- Tweet generation via Gemini `gemini-2.0-flash` model
-- Nature documentary narrator voice: warm, observant, plain language, no jargon
-- Thread format: 1 hook tweet (🧵) + up to 6 replies, each ≤ 275 chars
-- Final tweet includes live dashboard link
-- Credentials in `.env` file (gitignored)
-
----
-
 ## Running the Project
 
 ### Simulation
@@ -714,34 +662,6 @@ npm run build && npm start              # Production build on http://localhost:3
 
 The dashboard reads SQLite from `../data/simulation.db` relative to the dashboard directory.
 
-### Production Deployment (Hard Drive)
-```bash
-# From the hard drive (e.g. /Volumes/Samsung Harddrive /world_v2/)
-# 1. Start dashboard (production)
-cd dashboard && npm run build && npm start &
-
-# 2. Start simulation
-cd .. && python3 main.py --watchdog
-
-# 3. Cloudflare tunnel (runs as system service, auto-starts)
-# werld.uravshah.com → localhost:3000
-```
-
-### Required Python Packages
-```bash
-pip install tweepy google-genai python-dotenv
-```
-
-### Environment Variables (`.env`)
-```
-X_CONSUMER_KEY=...
-X_CONSUMER_SECRET=...
-X_ACCESS_TOKEN=...
-X_ACCESS_TOKEN_SECRET=...
-GEMINI_API_KEY=...
-DASHBOARD_URL=https://werld.uravshah.com
-```
-
 ---
 
 ## Known Issues & Historical Context
@@ -764,8 +684,6 @@ DASHBOARD_URL=https://werld.uravshah.com
 
 9. **Extinction Safeguard Ordering**: Safeguard spawns (when population drops to 1) now happen **before** logging, so all births/deaths including safeguard-spawned agents are properly counted in `total_births`/`total_deaths` statistics. Previously, safeguard spawns after logging caused misleading dashboard numbers.
 
-10. **X Free Tier Rate Limits**: The X free tier allows 500 posts/month. With chapters every 10,000 ticks (~10 seconds at 1000 ticks/sec), posting every chapter would exhaust the limit in minutes. The `MIN_HOURS_BETWEEN_POSTS = 12` rate limiter ensures max ~420 tweets/month. Chapters still accumulate on the dashboard regardless of posting.
-
 ---
 
 ## Phase History
@@ -785,4 +703,4 @@ DASHBOARD_URL=https://werld.uravshah.com
 | D | Documentation Update | Complete | Comprehensive claude.md |
 | E | Story, World Map, Tooltips | Complete | Story generation (every 10,000 ticks), canvas world map, InfoTip system, 11 dashboard sections |
 | **F** | **Remove Hardcoded Agent Ceilings** | **Complete** | **Evolvable broadcast bandwidth (1-16), 64-channel sensory field with 19 latent slots, cortex reliance/resolution, evolvable memory decay/social_weight, genome-gated macro capacity/pattern_length. 29 total genome traits. Zero hardcoded cognitive constraints.** |
-| **G** | **Public Launch & Social** | **Complete** | **Renamed to "Werld Observatory". 2 new dashboard pages (Welcome, Methods). Removed pause button, added uptime timer. X auto-posting via Gemini tweet threads. Cloudflare Tunnel hosting at werld.uravshah.com. Extinction safeguard ordering fix. Rate-limited X posting (12h minimum).** |
+| **G** | **Public Launch** | **Complete** | **Renamed to "Werld Observatory". 2 new dashboard pages (Welcome, Methods). Removed pause button, added uptime timer. Extinction safeguard ordering fix. Open-sourced.** |
