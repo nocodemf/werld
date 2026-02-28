@@ -30,7 +30,6 @@ from persistence.event_log import (
 from persistence.state_store import save_checkpoint, save_milestone, get_latest_checkpoint
 from persistence.db import prune_old_data
 from persistence.story import generate_chapter, save_substrate_topology, STORY_CHAPTER_EVERY
-from social.x_poster import post_latest_unposted_chapter
 
 
 class Simulation:
@@ -46,14 +45,26 @@ class Simulation:
         # Build graph substrate
         self.substrate = Substrate(rng=random.Random(self.rng.random()))
 
-        # Spawn initial agents on random nodes near each other
+        # Spawn initial agents spread across nearby nodes via BFS expansion
         self.agents: List[Agent] = []
-        # Pick a starting node and its neighbor for the initial pair
         start_node = self.substrate.random_node_id()
-        start_neighbors = self.substrate.nodes[start_node].neighbors
-        second_node = start_neighbors[0] if start_neighbors else start_node
 
-        spawn_nodes = [start_node, second_node]
+        # BFS to collect ~half as many nodes as agents, so agents cluster
+        # but don't all cram onto one or two nodes
+        target_nodes = max(2, cfg.INITIAL_AGENT_COUNT // 2)
+        spawn_nodes: List[int] = [start_node]
+        visited = {start_node}
+        queue = [start_node]
+        while queue and len(spawn_nodes) < target_nodes:
+            current = queue.pop(0)
+            for neighbor in self.substrate.nodes[current].neighbors:
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    spawn_nodes.append(neighbor)
+                    queue.append(neighbor)
+                    if len(spawn_nodes) >= target_nodes:
+                        break
+
         for i in range(cfg.INITIAL_AGENT_COUNT):
             genome = Genome.random(rng=random.Random(self.rng.random()))
             node_id = spawn_nodes[i % len(spawn_nodes)]
@@ -363,16 +374,11 @@ class Simulation:
                     mpath = save_milestone(self)
                     print(f"  [MILESTONE] Saved milestone at tick {self.tick}: {mpath}")
 
-                # Story chapter generation + auto-post to X
+                # Story chapter generation
                 if self.tick % STORY_CHAPTER_EVERY == 0 and self.tick > 0:
                     chapter = generate_chapter(self.tick)
                     if chapter:
                         print(f"  [STORY] New chapter written for tick {self.tick}")
-                        # Auto-post to X (non-blocking — failures won't crash sim)
-                        try:
-                            post_latest_unposted_chapter()
-                        except Exception as e:
-                            print(f"  [X-POSTER] Error: {e}")
 
                 # DB pruning
                 if self.tick % cfg.DB_PRUNE_EVERY == 0:

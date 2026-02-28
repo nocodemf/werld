@@ -16,7 +16,7 @@ export default function StorySection({ data }: { data: SimulationData }) {
     ? [...storyChapters]
     : [...storyChapters].reverse();
 
-  const ticksPerChapter = 1000;
+  const ticksPerChapter = 50000;
   const currentChapter = Math.floor(overview.currentTick / ticksPerChapter);
   const progressInChapter =
     ((overview.currentTick % ticksPerChapter) / ticksPerChapter) * 100;

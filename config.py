@@ -141,7 +141,7 @@ CORTEX_DECAY_RATE = 0.001
 NUM_MOVE_ACTIONS = 4
 
 # ── Initial population ──────────────────────────────────────────────────────
-INITIAL_AGENT_COUNT = 2
+INITIAL_AGENT_COUNT = 30
 
 # ── Compound Actions (Self-Modification) ─────────────────────────────────────
 MAX_COMPOUND_ACTIONS = 20
