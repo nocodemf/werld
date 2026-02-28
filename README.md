@@ -67,7 +67,7 @@ All of this was unscripted, it just happened.
 ---
 ## Werld Observatory: Screenshots 
 
-![Overview](screenshots/overview.png)
+![Overview](screenshots/Overview.png)
 
 ---
 
